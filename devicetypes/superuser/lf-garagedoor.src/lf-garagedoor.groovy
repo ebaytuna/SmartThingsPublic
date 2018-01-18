@@ -99,12 +99,14 @@ def updated() {
 	log.debug "----------------update called"
     //return
 	unschedule()
-	runEvery1Minutes(refresh)
+	runEvery1Minute(refresh)
+	//runEvery5Minutes(refresh)
 	runIn(2, refresh)	//after 2 second take a run for refresh()
 }
 def poll() {
 	log.debug "Executing 'poll'"
-	status()
+	log.debug "do nothing on 'poll'"
+	//status()
 	//parent.poll()
 }
 def refresh() {
