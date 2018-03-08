@@ -1,8 +1,7 @@
 /**
- *  Generic HTTP Device v1.0.20160402
+ *  LF_ThremSW
  *
- *  Source code can be found here: https://github.com/LF-SmartThings/
- *  Copyright 2018 LF
+ *  Copyright 2018 Li Feng
  *
  *  Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file except
  *  in compliance with the License. You may obtain a copy of the License at:
@@ -14,11 +13,8 @@
  *  for the specific language governing permissions and limitations under the License.
  *
  */
-
-import groovy.json.JsonSlurper
-
 metadata {
-	definition (name: "LF_GarageDoor", author: "lf", namespace:"") {
+	definition (name: "TSwitch", namespace: "LF", author: "Li Feng") {
         attribute "status", "string"
    		capability "Polling"
 
@@ -27,11 +23,10 @@ metadata {
 		capability "Refresh"
 		capability "Sensor"
 
-		command "openG1"
-		command "closeG1"
-		command "openG2"
-		command "closeG2"
-		command "open"
+		command "turnOnS1"
+		command "turnOffS1"
+		command "on_Z22"
+		command "off_Z22"
 		command "status"
 	}
 
@@ -59,39 +54,31 @@ metadata {
 			state "default", label:'', action:"refresh", icon:"st.secondary.refresh"
 		}
 
-		standardTile("toggle1", "gATE1", width: 2, height: 2) {
-			state("closed", label:"G 1\r\n" + '${name}', action:"openG1", icon:"st.doors.garage.garage-closed", backgroundColor:"#00A0DC", nextState:"moving")
-			state("open", label:"G 1\r\n" + '${name}', action:"closeG1", icon:"st.doors.garage.garage-open", backgroundColor:"#2fee2f", nextState:"moving")
-			state("opening", label:"G 1\r\n" + '${name}', icon:"st.doors.garage.garage-closed", backgroundColor:"#e86d13")
-			state("closing", label:"G 1\r\n" + '${name}', icon:"st.doors.garage.garage-open", backgroundColor:"#00A0DC")
-			state("error", label:"G 1\r\n" + 'Failed', action: "", backgroundColor: "#FFAA33")
-			state("moving", label:"G 1\r\n" + 'MOVING', action: "", backgroundColor: "#FFAA33")		
+		standardTile("toggle1", "zONE1", width: 2, height: 2) {
+			state("on", label:"Z 1\r\n" + "turn " + '${name}', action:"turnOnS1", icon:"", backgroundColor:"#00A0DC", nextState:"off")
+			state("off", label:"Z 1\r\n" + "turn " + '${name}', action:"turnOffS1", icon:"", backgroundColor:"#7F0000", nextState:"on")
 		}
-		standardTile("open1", "device.door", inactiveLabel: false, decoration: "flat") {
-			state "default", label:'open door 1', action:"openG1", icon:"st.doors.garage.garage-opening"
+		standardTile("on1", "device.door", inactiveLabel: false, decoration: "flat") {
+			state "default", label:'Turn on Z1', action:"turnOnS1", icon:"st.switches.switch.on"
 		}
-		standardTile("close1", "device.door", inactiveLabel: false, decoration: "flat") {
-			state "default", label:'close door 1', action:"closeG1", icon:"st.doors.garage.garage-closing"
+		standardTile("off1", "device.door", inactiveLabel: false, decoration: "flat") {
+			state "default", label:'Turn off Z1', action:"turnOffS1", icon:"st.switches.switch.off"
 		}
 
 
 		standardTile("toggle2", "gATE2", width: 2, height: 2) {
-			state("closed", label:"G 2\r\n" + '${name}', action:"openG2", icon:"st.doors.garage.garage-closed", backgroundColor:"#00A0DC", nextState:"moving")
-			state("open", label:"G 2\r\n" + '${name}', action:"closeG2", icon:"st.doors.garage.garage-open", backgroundColor:"#3fff3f", nextState:"moving")
-			state("opening", label:"G 2\r\n" + '${name}', icon:"st.doors.garage.garage-closed", backgroundColor:"#e86d13")
-			state("closing", label:"G 2\r\n" + '${name}', icon:"st.doors.garage.garage-open", backgroundColor:"#00A0DC")
-			state("error", label:"G 2\r\n" + 'Failed', action: "", backgroundColor: "#FFAA33")
-			state("moving", label:"G 2\r\n" + 'MOVING', action: "", backgroundColor: "#FFAA33")
+			state("on", label:"Z 2\r\n" + "turn " + '${name}', action:"openG2", icon:"", backgroundColor:"#00A0DC", nextState:"off")
+			state("off", label:"Z 2\r\n" + "turn " + '${name}', action:"closeG2", icon:"", backgroundColor:"#7F0000", nextState:"on")
 		}
-		standardTile("open2", "device.door", inactiveLabel: false, decoration: "flat") {
-			state "default", label:'open door 2', action:"openG2", icon:"st.doors.garage.garage-opening"
+		standardTile("on2", "device.door", inactiveLabel: false, decoration: "flat") {
+			state "default", label:'Turn on Z2', action:"turnOnS2", icon:"st.doors.garage.garage-opening"
 		}
-		standardTile("close2", "device.door", inactiveLabel: false, decoration: "flat") {
-			state "default", label:'close door 2', action:"closeG2", icon:"st.doors.garage.garage-closing"
+		standardTile("off2", "device.door", inactiveLabel: false, decoration: "flat") {
+			state "default", label:'Turn off Z2', action:"turnOffS2", icon:"st.doors.garage.garage-closing"
 		}
         
 		main (["toggle1", "toggle2"])
-		details(["toggle1", "open1", "close1", "toggle2", "open2", "close2", "refresh"])
+		details(["toggle1", "on1", "off1", "toggle2", "on2", "off2", "refresh"])
 	}
     
 }
@@ -125,7 +112,6 @@ def refresh() {
 def onoffGate(int gid) {
 	log.debug "Toggle gate $gid"
     if (gid == -1) {
-		runCmd("open?gid=-1")
     } else {
     	runCmd("open?gid=${gid}")
     }
@@ -133,30 +119,27 @@ def onoffGate(int gid) {
     //schedule(now() + 13000, refresh)
 }
 
-def open() {
-	onoffGate(-1)
+def turnOnAll() {
+	runCmd("open?gid=-1")
 }
 
-def openG1() {
-	onoffGate(1)
-	//log.debug "Triggered OPEN!!!"
-	////sendEvent(name: "triggerswitch", value: "triggeron", isStateChange: true)
-    //state.blinds = "on";
-	//runCmd("open")
-}
-def closeG1() {
-	onoffGate(1)
-	//log.debug "Triggered CLOSE!!!"
-	////sendEvent(name: "triggerswitch", value: "triggeroff", isStateChange: true)
-    //state.blinds = "off";
-	//runCmd("close")
+def turnOffAll() {
+	runCmd("close?gid=-1")
 }
 
-def openG2() {
-	onoffGate(2)
+def turnOnS1() {
+	runCmd("open?gid=1")
 }
-def closeG2() {
-	onoffGate(2)
+
+def turnOffS1() {
+	runCmd("close?gid=1")
+}
+
+def turnOnS2() {
+	runCmd("open?gid=2")
+}
+def turnOffS2() {
+	runCmd("clolse?gid=2")
 }
 
 def status() {
@@ -234,81 +217,48 @@ def parse(String description) {
 	log.debug "Receiving Message From Device: " + status + " body: " + body
 	log.debug "JSON: " + json
 
-	int sensor_state
-	if (json.containsKey("sensor_state")){
-		log.debug "sensor_state: " + json.sensor_state
-    	sensor_state = json.sensor_state
+	int sw_state
+	if (json.containsKey("states")){
+		log.debug "sw state: " + json.states
+    	sw_state = json.states
 	} else {
-    	sensor_state = 0
+    	sw_state = 0
     }
-	if (json.containsKey("gate_states")){
-		log.debug "gate_state: " + json.gate_states
+	if (json.containsKey("temperature")){
+		log.debug "temperature: " + json.temperature
 	}
     
-    def gate1 = doorStatus((sensor_state>>2)&0x3)
-	log.debug "gate_1: " + gate1
+    def sw1 = doorStatus((sw_state)&0x01)
+	log.debug "sw_1: " + sw1
 
-    def gate2 = doorStatus((sensor_state)&0x3)
-	log.debug "gate_2: " + gate2
+    def sw2 = doorStatus((sw_state)&0x02)
+	log.debug "sw_2: " + sw2
     
-    int state1 = (sensor_state>>2)&0x3
-    int state2 = (sensor_state)&0x03
+    int state1 = (sw_state)&0x01
+    int state2 = (sw_state)&0x02
     
     switch(state1) {
-    	case 0:	//error, out of power?
-			sendEvent(name: "gATE1", value: "error", isStateChange: true)
+    	case 0:	//off
+			sendEvent(name: "gATE1", value: "off", isStateChange: true)
 			//def result = createEvent(name: "switch", value: "off", isStateChange: true)
 			//return result
         	break
-    	case 1:	//closed
-			sendEvent(name: "gATE1", value: "closed", isStateChange: true)
-        	break
-    	case 2:	//open
-			sendEvent(name: "gATE1", value: "open", isStateChange: true)
-        	break
-    	case 3:	//middle, moving...
-			sendEvent(name: "gATE1", value: "moving", isStateChange: true)
+    	case 1:	//on
+			sendEvent(name: "gATE1", value: "on", isStateChange: true)
         	break
     }
 
     switch(state2) {
-    	case 0:	//error, out of power?
-			sendEvent(name: "gATE2", value: "error", isStateChange: true)
+    	case 0:	//off
+			sendEvent(name: "gATE2", value: "off", isStateChange: true)
 			//def result = createEvent(name: "switch", value: "off", isStateChange: true)
 			//return result
         	break
-    	case 1:	//closed
-			sendEvent(name: "gATE2", value: "closed", isStateChange: true)
-        	break
-    	case 2:	//open
-			sendEvent(name: "gATE2", value: "open", isStateChange: true)
-        	break
-    	case 3:	//middle, moving...
-			sendEvent(name: "gATE2", value: "moving", isStateChange: true)
+    	case 2:	//on
+			sendEvent(name: "gATE2", value: "on", isStateChange: true)
         	break
     }
 
-	//if (json.containsKey("state") && json.state == 1) {
-    //    whichTile = 'mainon'
-    //}
-    //if (json.containsKey("state") && json.state == 0) {
-    //    whichTile = 'mainoff'
-    //}
-    
-    /*switch (whichTile) {
-        case 'mainon':
-			sendEvent(name: "triggerswitch", value: "triggeron", isStateChange: true)
-			def result = createEvent(name: "switch", value: "on", isStateChange: true)
-			return result
-        case 'mainoff':
-			sendEvent(name: "triggerswitch", value: "triggeroff", isStateChange: true)
-			def result = createEvent(name: "switch", value: "off", isStateChange: true)
-			return result
-        default:
-			def result = createEvent(name: "testswitch", value: "default", isStateChange: true)
-			//log.debug "testswitch returned ${result?.descriptionText}"
-			return result
-    }*/
 }
 
 private String convertIPtoHex(ipAddress) {
@@ -340,16 +290,10 @@ private String doorStatus(int ocValue) {
   String state;
   switch (ocValue) {
     case 0:
-      state = "error";
+      state = "off";
       break;
     case 1:
-      state = "closed";
-      break;
-    case 2:
-      state = "opened";
-      break;
-    case 3:
-      state = "moving...";
+      state = "on";
       break;
     default:
       state = "something wrong!";
