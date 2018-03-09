@@ -25,8 +25,8 @@ metadata {
 
 		command "turnOnS1"
 		command "turnOffS1"
-		command "on_Z22"
-		command "off_Z22"
+		command "turnOnS2"
+		command "turnOffS2"
 		command "status"
 	}
 
@@ -55,8 +55,8 @@ metadata {
 		}
 
 		standardTile("toggle1", "zONE1", width: 2, height: 2) {
-			state("on", label:"Z 1\r\n" + "turn " + '${name}', action:"turnOnS1", icon:"", backgroundColor:"#00A0DC", nextState:"off")
-			state("off", label:"Z 1\r\n" + "turn " + '${name}', action:"turnOffS1", icon:"", backgroundColor:"#7F0000", nextState:"on")
+			state("on", label:"Z 1\r\n" + '${name}', action:"turnOffS1", icon:"", backgroundColor:"#00A0DC", nextState:"off")
+			state("off", label:"Z 1\r\n" + '${name}', action:"turnOnS1", icon:"", backgroundColor:"#7F5500", nextState:"on")
 		}
 		standardTile("on1", "device.door", inactiveLabel: false, decoration: "flat") {
 			state "default", label:'Turn on Z1', action:"turnOnS1", icon:"st.switches.switch.on"
@@ -67,8 +67,8 @@ metadata {
 
 
 		standardTile("toggle2", "gATE2", width: 2, height: 2) {
-			state("on", label:"Z 2\r\n" + "turn " + '${name}', action:"openG2", icon:"", backgroundColor:"#00A0DC", nextState:"off")
-			state("off", label:"Z 2\r\n" + "turn " + '${name}', action:"closeG2", icon:"", backgroundColor:"#7F0000", nextState:"on")
+			state("on", label:"Z 2\r\n" + '${name}', action:"turnOffS2", icon:"", backgroundColor:"#00A0DC", nextState:"off")
+			state("off", label:"Z 2\r\n" + '${name}', action:"turnOnS2", icon:"", backgroundColor:"#7F5500", nextState:"on")
 		}
 		standardTile("on2", "device.door", inactiveLabel: false, decoration: "flat") {
 			state "default", label:'Turn on Z2', action:"turnOnS2", icon:"st.doors.garage.garage-opening"
@@ -139,13 +139,13 @@ def turnOnS2() {
 	runCmd("open?gid=2")
 }
 def turnOffS2() {
-	runCmd("clolse?gid=2")
+	runCmd("close?gid=2")
 }
 
 def status() {
 	log.debug "get status"
 	sendEvent(name: "toggle1", value: "trying", isStateChange: true)
-	sendEvent(name: "toggle2", value: "trying", isStateChange: true)
+	//sendEvent(name: "toggle2", value: "trying", isStateChange: true)
 	runCmd("status")	
 }
 
@@ -239,12 +239,12 @@ def parse(String description) {
     
     switch(state1) {
     	case 0:	//off
-			sendEvent(name: "gATE1", value: "off", isStateChange: true)
+			sendEvent(name: "zONE1", value: "off", isStateChange: true)
 			//def result = createEvent(name: "switch", value: "off", isStateChange: true)
 			//return result
         	break
     	case 1:	//on
-			sendEvent(name: "gATE1", value: "on", isStateChange: true)
+			sendEvent(name: "zONE1", value: "on", isStateChange: true)
         	break
     }
 
@@ -293,6 +293,7 @@ private String doorStatus(int ocValue) {
       state = "off";
       break;
     case 1:
+    case 2:
       state = "on";
       break;
     default:
